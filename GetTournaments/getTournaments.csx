@@ -34,7 +34,18 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, TraceW
     if (jwt == null)
         return req.CreateError(HttpStatusCode.Unauthorized);
 
+    var connectionString = "TournamentStorage".GetEnvVar();
+    var tableService = new TableService(connectionString);
+
     IDictionary<string, string> query = req.GetQueryNameValuePairs().ToDictionary(pair => pair.Key, pair => pair.Value);
+
+    SeasonDataEntity seasonDataEntity = null;
+
+    if(query["season"].ToLower() == "current")
+    {
+        seasonDataEntity = await tableService.GetEntityAsync<SeasonDataEntity>("season", "data", "season");
+        query["season"] = $"{seasonDataEntity.Season}";
+    }
 
     var season = Convert.ToInt32(query["season"]);
     var tour = query["tour"];
@@ -42,9 +53,6 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, TraceW
     var value = string.Empty;
     if(key != "all")
         value = query["value"].ToLower();
-
-    var connectionString = "TournamentStorage".GetEnvVar();
-    var tableService = new TableService(connectionString);
 
     List<TournamentEntity> partition = await tableService.GetPartitionAsync<TournamentEntity>("tournaments", $"{season}:{tour}");
 
@@ -69,7 +77,8 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, TraceW
     {
         if (value == "current")
         {
-            SeasonDataEntity seasonDataEntity = await tableService.GetEntityAsync<SeasonDataEntity>("season", "data", "season");
+            if(seasonDataEntity == null)
+                seasonDataEntity = await tableService.GetEntityAsync<SeasonDataEntity>("season", "data", "season");
             int currentWeek = seasonDataEntity.CurrentWeek;
             return req.CreateOk(ConvertTournament(partition.Where(x => x.WeekNumber == currentWeek)).FirstOrDefault());
         }
