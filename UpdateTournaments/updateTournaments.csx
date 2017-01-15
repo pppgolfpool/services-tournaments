@@ -164,7 +164,7 @@ public static async Task Run(TimerInfo timer, TraceWriter log)
             state = "picking";
         if (tEntity.WeekNumber == currentWeek && DateTime.UtcNow > tEntity.Start)
             state = "progressing";
-        if (nextWeekEntity != null && nextWeekEntity.Open)
+        if (nextWeekEntity != null && nextWeekEntity.Open && tEntity.WeekNumber < currentWeek)
             state = "completed";
         if (nextWeekEntity != null && DateTime.UtcNow > nextWeekEntity.Start)
             state = "dequeued";
