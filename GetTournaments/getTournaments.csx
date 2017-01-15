@@ -100,6 +100,7 @@ public static List<ResponseTournament> ConvertTournament(IEnumerable<TournamentE
 {
     return tournaments.Select(x => new ResponseTournament
     {
+        Index = x.RowKey,
         Season = x.Season,
         Tour = x.Tour,
         PermanentNumber = x.PermanentNumber,
@@ -131,6 +132,7 @@ public class ResponseTournament
 
     }
 
+    public string Index { get; set; }
     public int Season { get; set; }
     public string Tour { get; set; }
     public string PermanentNumber { get; set; }
