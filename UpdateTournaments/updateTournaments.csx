@@ -32,7 +32,11 @@ public static async Task Run(TimerInfo timer, TraceWriter log)
     int currentSeason = seasonDataEntity.Season;
 
     // General data from tournaments is retrieved from the "Schedule.xml" file. It doesn't update very often, so 6 hours is enough tolerance.
-    XDocument xSchedule = await RefreshFileService.RefreshXmlFile(connectionString, "data", "r/current/schedule.xml", TimeSpan.FromHours(6));
+    // However, if a tournament is about to end, update it faster.
+    var tolerance = 6;
+    if (DateTime.UtcNow.DayOfWeek == DayOfWeek.Sunday || DateTime.UtcNow.DayOfWeek == DayOfWeek.Monday)
+        tolerance = 1;
+    XDocument xSchedule = await RefreshFileService.RefreshXmlFile(connectionString, "data", "r/current/schedule.xml", TimeSpan.FromHours(tolerance));
 
     // The current week is also determined by the schedule.xml file. It updates right after the weekend tournament is complete.
     int currentWeek = GetCurrentWeek(xSchedule);
